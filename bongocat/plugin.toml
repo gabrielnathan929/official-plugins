@@ -11,6 +11,7 @@ version = "1.1.1"
 min_noctalia = "5.0.0"
 author = "noctalia"
 license = "MIT"
+dependencies = []
 icon = "cat"
 description = "A cat that slaps your bar when you type or to the beat."
 tags = ["fun", "animation", "cat"]

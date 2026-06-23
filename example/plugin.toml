@@ -9,6 +9,7 @@ version = "1.0.2"
 min_noctalia = "5.0.0"
 author = "noctalia"
 license = "MIT"
+dependencies = []
 tags = ["example", "demo"]
 icon = "puzzle"
 description = "A minimal reference plugin: a bar widget with settings, click handling, and IPC."

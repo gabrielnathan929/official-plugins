@@ -16,6 +16,7 @@ version = "1.1.6"
 min_noctalia = "5.0.0"
 author = "noctalia"
 license = "MIT"
+dependencies = ["gpu-screen-recorder"]
 tags = ["recording", "screen", "video"]
 icon = "video"
 description = "Record the screen with gpu-screen-recorder."
