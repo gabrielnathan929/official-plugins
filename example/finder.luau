@@ -17,10 +17,6 @@ local CATEGORIES = {
   colors = { "Amber", "Azure", "Crimson", "Teal" },
 }
 
-local function trim(s)
-  return (s:gsub("^%s+", ""):gsub("%s+$", ""))
-end
-
 -- Top level: one row per category. Activating a row drills into it.
 local function categoryRows()
   local rows = {}
@@ -56,10 +52,10 @@ end
 
 -- `query` is the launcher text after the `/ex` prefix, leading space trimmed.
 function onQuery(query)
-  local text = trim(query)
+  local text = noctalia.string.trim(query)
   local category, rest = text:match("^(%S+)%s*(.*)$")
   if category and CATEGORIES[category] then
-    launcher.setResults(query, itemRows(category, trim(rest)))
+    launcher.setResults(query, itemRows(category, noctalia.string.trim(rest)))
   else
     launcher.setResults(query, categoryRows())
   end

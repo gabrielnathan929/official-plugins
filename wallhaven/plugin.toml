@@ -1,6 +1,6 @@
 id = "noctalia/wallhaven"
 name = "Wallhaven"
-version = "1.0.2"
+version = "1.0.3"
 min_noctalia = "5.0.0"
 author = "noctalia"
 license = "MIT"
