@@ -6,7 +6,7 @@
 [[plugin]]
 id = "noctalia/example"
 name = "Example"
-version = "1.0.4"
+version = "1.0.5"
 author = "noctalia"
 license = "MIT"
 icon = "puzzle"
@@ -61,7 +61,7 @@ tags = ["timer", "countdown", "desktop"]
 [[plugin]]
 id = "noctalia/wallhaven"
 name = "Wallhaven"
-version = "1.0.1"
+version = "1.0.2"
 author = "noctalia"
 license = "MIT"
 icon = "photo"

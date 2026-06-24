@@ -6,7 +6,7 @@
 
 id = "noctalia/example"
 name = "Example"
-version = "1.0.4"
+version = "1.0.5"
 min_noctalia = "5.0.0"
 author = "noctalia"
 license = "MIT"
@@ -71,3 +71,5 @@ id = "panel"
 entry = "panel.luau"
 width = 420
 height = 410
+placement = "floating"
+position = "center"

@@ -1,6 +1,6 @@
 id = "noctalia/wallhaven"
 name = "Wallhaven"
-version = "1.0.1"
+version = "1.0.2"
 min_noctalia = "5.0.0"
 author = "noctalia"
 license = "MIT"
@@ -28,6 +28,8 @@ id = "browser"
 entry = "panel.luau"
 width = 920
 height = 780
+placement = "attached"
+position = "auto"
 
 [[widget]]
 id = "wallhaven"
