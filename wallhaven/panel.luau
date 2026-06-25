@@ -60,16 +60,6 @@ local function sortLabelList()
   }
 end
 
-local function trim(s)
-  return (s:gsub("^%s+", ""):gsub("%s+$", ""))
-end
-
-local function urlEncode(s)
-  return (s:gsub("[^%w%-_%.~]", function(c)
-    return string.format("%%%02X", c:byte())
-  end))
-end
-
 local function shellQuote(s)
   return "'" .. s:gsub("'", "'\\''") .. "'"
 end
@@ -356,9 +346,9 @@ fetchWallpapers = function()
     `sorting={sortValue()}`,
     "order=desc",
   }
-  local trimmed = trim(query)
+  local trimmed = noctalia.string.trim(query)
   if trimmed ~= "" then
-    table.insert(params, `q={urlEncode(trimmed)}`)
+    table.insert(params, `q={noctalia.string.urlEncode(trimmed)}`)
   end
   local url = API_BASE .. "/search?" .. table.concat(params, "&")
 

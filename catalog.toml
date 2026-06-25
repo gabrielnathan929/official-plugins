@@ -1,3 +1,5 @@
+# This file is auto-generated. Do not edit manually.
+# Do not include it in your commit.
 # Official Noctalia plugins catalog.
 # Index of every plugin this source ships — the minimum needed to render, search,
 # and compat-check the list. The per-plugin plugin.toml stays authoritative; the
@@ -6,7 +8,7 @@
 [[plugin]]
 id = "noctalia/example"
 name = "Example"
-version = "1.0.5"
+version = "1.0.6"
 author = "noctalia"
 license = "MIT"
 icon = "puzzle"
@@ -39,7 +41,7 @@ tags = ["fun", "animation", "cat"]
 [[plugin]]
 id = "noctalia/translator"
 name = "Translator"
-version = "1.0.2"
+version = "1.0.3"
 author = "noctalia"
 license = "MIT"
 icon = "language"
@@ -61,10 +63,21 @@ tags = ["timer", "countdown", "desktop"]
 [[plugin]]
 id = "noctalia/wallhaven"
 name = "Wallhaven"
-version = "1.0.2"
+version = "1.0.3"
 author = "noctalia"
 license = "MIT"
 icon = "photo"
 description = "Browse Wallhaven wallpapers."
 min_noctalia = "5.0.0"
 tags = ["wallpaper", "wallhaven", "panel"]
+
+[[plugin]]
+id = "noctalia/mpvpaper"
+name = "Video Wallpaper"
+version = "1.0.0"
+author = "noctalia"
+license = "MIT"
+icon = "movie"
+description = "Animated and video wallpapers via mpvpaper."
+min_noctalia = "5.0.0"
+tags = ["wallpaper", "video", "mpvpaper"]

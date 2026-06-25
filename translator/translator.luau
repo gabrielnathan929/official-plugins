@@ -44,16 +44,6 @@ local LANGUAGES = {
 local cache = {}
 local pending = {}
 
-local function trim(s)
-  return (s:gsub("^%s+", ""):gsub("%s+$", ""))
-end
-
-local function urlEncode(s)
-  return (s:gsub("[^%w%-_%.~]", function(c)
-    return string.format("%%%02X", c:byte())
-  end))
-end
-
 -- Resolve a token to a language code: a known alias, or a bare 2–3 letter code.
 local function resolveLang(token)
   local lower = token:lower()
@@ -89,7 +79,7 @@ local function parseGoogle(body)
 end
 
 local function fetchGoogle(text, target, onDone)
-  local url = `https://translate.google.com/translate_a/single?client=gtx&sl=auto&tl={urlEncode(target)}&dt=t&q={urlEncode(text)}`
+  local url = `https://translate.google.com/translate_a/single?client=gtx&sl=auto&tl={noctalia.string.urlEncode(target)}&dt=t&q={noctalia.string.urlEncode(text)}`
   noctalia.http({ url = url }, function(res)
     if not res.ok then
       onDone(nil, "Connection error — is the network up?")
@@ -118,7 +108,7 @@ local function resultRow(translated, target)
 end
 
 function onQuery(query)
-  local text = trim(query:gsub("%s+", " "))
+  local text = noctalia.string.trim(query:gsub("%s+", " "))
   if text == "" then
     launcher.setResults(query, { hintRow("Translate text", "Type: <lang> <text> — e.g. es hello", "language") })
     return
@@ -130,7 +120,7 @@ function onQuery(query)
     local code = resolveLang(first)
     if code then
       target = code
-      content = trim(rest)
+      content = noctalia.string.trim(rest)
     else
       target = DEFAULT_TARGET
       content = text

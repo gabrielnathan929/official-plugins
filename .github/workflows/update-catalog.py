@@ -77,6 +77,8 @@ def toml_bool(value: bool) -> str:
 
 def render_catalog(plugins: list[dict]) -> str:
     lines = [
+        "# This file is auto-generated. Do not edit manually.",
+        "# Do not include it in your commit.",
         "# Official Noctalia plugins catalog.",
         "# Index of every plugin this source ships \u2014 the minimum needed to render, search,",
         "# and compat-check the list. The per-plugin plugin.toml stays authoritative; the",
