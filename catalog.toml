@@ -78,6 +78,6 @@ version = "1.0.0"
 author = "noctalia"
 license = "MIT"
 icon = "movie"
-description = "Animated and video wallpapers via mpvpaper."
+description = "Video wallpapers via mpvpaper."
 min_noctalia = "5.0.0"
 tags = ["wallpaper", "video", "mpvpaper"]
