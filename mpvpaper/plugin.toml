@@ -16,7 +16,7 @@ author = "noctalia"
 license = "MIT"
 tags = ["wallpaper", "video", "mpvpaper"]
 icon = "movie"
-description = "Animated and video wallpapers via mpvpaper."
+description = "Video wallpapers via mpvpaper."
 
 [[setting]]
 key = "video_directory"
