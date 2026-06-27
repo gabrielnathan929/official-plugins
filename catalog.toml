@@ -63,7 +63,7 @@ tags = ["timer", "countdown", "desktop"]
 [[plugin]]
 id = "noctalia/wallhaven"
 name = "Wallhaven"
-version = "1.0.4"
+version = "1.0.5"
 author = "noctalia"
 license = "MIT"
 icon = "photo"
@@ -74,7 +74,7 @@ tags = ["wallpaper", "wallhaven", "panel"]
 [[plugin]]
 id = "noctalia/mpvpaper"
 name = "Video Wallpaper"
-version = "1.0.2"
+version = "1.0.3"
 author = "noctalia"
 license = "MIT"
 icon = "movie"
