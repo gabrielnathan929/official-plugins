@@ -360,6 +360,32 @@ end
 local function saveReplay()
     if state ~= "replaying" then return end
     noctalia.runAsync("pkill -SIGUSR1 -f 'gpu-screen-recorder.*-r ' 2>/dev/null || true")
+
+    local pattern = cfg("replay_filename_pattern")
+    if pattern ~= nil and pattern ~= "" then
+        local dir = outputDirectory()
+        local targetFile = `{dir}{noctalia.formatTime(pattern)}.mp4`
+        -- Replay mode only accepts an output directory (-o "{dir}"), so gpu-screen-recorder
+        -- names the file itself as Replay_<timestamp>.mp4 using its own clock when it
+        -- finalizes. Rather than predict that name, poll for the newest Replay_*.mp4 the
+        -- save produced and rename it. `ref` (one second before the SIGUSR1) bounds the
+        -- search so an earlier replay sitting in the directory is never picked up.
+        local ref = (tonumber(noctalia.formatTime("%s")) or 0) - 1
+        local claim = `f=$(find {shellQuote(dir)} -maxdepth 1 -name 'Replay_*.mp4' -newermt "@{ref}" -printf '%T@ %p\\n' 2>/dev/null | sort -n | tail -1 | cut -d' ' -f2-); `
+            .. `if [ -n "$f" ]; then mv -n -- "$f" {shellQuote(targetFile)}; else exit 1; fi`
+        local attempts = 50
+        local function poll()
+            noctalia.runAsync(`sleep 0.2; {claim}`, function(result)
+                if result.exitCode == 0 then return end
+                if attempts > 0 then
+                    attempts -= 1
+                    poll()
+                end
+            end)
+        end
+        poll()
+    end
+
     noctalia.notify(noctalia.tr("notify.replay-saved"))
 end
 
