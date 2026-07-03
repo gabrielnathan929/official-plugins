@@ -92,3 +92,14 @@ icon = "mood-smile"
 description = "Browse and search kaomoji emoticons from the launcher and copy them to the clipboard."
 min_noctalia = "5.0.0"
 tags = ["emoticon", "launcher"]
+
+[[plugin]]
+id = "noctalia/notes"
+name = "Notes"
+version = "1.0.0"
+author = "noctalia"
+license = "MIT"
+icon = "notes"
+description = "Quick markdown notes in a full-height side panel."
+min_noctalia = "5.0.0"
+tags = ["productivity"]
