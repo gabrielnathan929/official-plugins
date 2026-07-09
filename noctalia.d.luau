@@ -137,6 +137,11 @@ export type Noctalia = {
   listDir: (path: string) -> ({ string }?, string?),
   pluginDir: () -> string?,
 
+  -- Register a font file (path resolves like readFile) so its family becomes
+  -- usable in setFont / a ui label's fontFamily. Returns the family name, or
+  -- (nil, err). The family is visible to every surface once loaded.
+  loadFont: (path: string) -> (string?, string?),
+
   -- Translation against the plugin's own translations/<lang>.json.
   tr: (key: string, subst: { [string]: string | number | boolean }?) -> string,
   trp: (key: string, count: number, subst: { [string]: string | number | boolean }?) -> string,
@@ -171,7 +176,10 @@ declare barWidget: {
   setImage: (path: string, watch: boolean?, width: number?, height: number?) -> (),
   setTooltip: (tooltip: (string | TooltipRow | { TooltipRow })?) -> (),
   clearTooltip: () -> (),
-  setFont: (family: string) -> (), -- family name or plugin-relative .otf/.ttf/.woff2
+  -- family: a font family name (load a file first with noctalia.loadFont).
+  -- baseline: "text" (default) | "textFixedHeight" | "inkCentered" | "pictographic"
+  -- ("pictographic" centers art/icon fonts anchored at the ink top, e.g. bongocat).
+  setFont: (family: string, baseline: string?) -> (),
   setColor: (role: string, mode: string?) -> (),
   setGlyphColor: (role: string, mode: string?) -> (),
   isVertical: () -> boolean,
