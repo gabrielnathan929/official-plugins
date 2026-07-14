@@ -258,7 +258,7 @@ local function filtersPanel()
         ui.button({
           key = "sort_order",
           glyph = if sortOrder == "desc" then "arrow-down" else "arrow-up",
-          text = if sortOrder == "desc" then tr("sort_desc") else tr("sort_asc"),
+					tooltip = if sortOrder == "desc" then tr("sort_desc") else tr("sort_asc"),
           variant = "outline",
           onClick = "onToggleSortOrder",
         }),
