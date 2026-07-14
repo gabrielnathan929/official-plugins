@@ -9,6 +9,7 @@
 --   panel.render(tree)              replace the panel's UI tree
 --   panel.close()                   ask the host to close this panel
 --   panel.getConfig(key)            settings (seeded from the manifest)
+--   noctalia.openColorPicker(...)   open the native color picker asynchronously
 --   button/toggle/slider/...        onClick / onChange call the plugin global of
 --                                   that name; values arrive as string args
 --
@@ -30,6 +31,8 @@ local volume = 50
 local greeting = ""
 local themeIndex = 0
 local themes = { "Dark", "Light", "System" }
+local selectedColor = "#FFF59B"
+local colorPickerStatus = "Choose a color to test the dialog callback."
 
 -- A labelled section: a heading above a control. ui.column stretches children to
 -- the panel width by default, so the control fills the row.
@@ -68,6 +71,15 @@ local function render()
       })),
 
       section("Theme", ui.select({ options = themes, selectedIndex = themeIndex, onChange = "onTheme" })),
+
+      section("Color picker", ui.column({ gap = 8 }, {
+        ui.row({ gap = 12, align = "center" }, {
+          ui.button({ text = "Choose color", onClick = "onColorPickerClicked" }),
+          ui.box({ width = 32, height = 32, radius = 8, fill = selectedColor, border = "outline", borderWidth = 1 }),
+          ui.label({ text = selectedColor, color = "on_surface", flexGrow = 1 }),
+        }),
+        ui.label({ text = colorPickerStatus, color = "on_surface_variant" }),
+      })),
     }),
   }))
 end
@@ -95,6 +107,23 @@ end
 function onTheme(index, _text)
   themeIndex = tonumber(index) or 0
   render()
+end
+
+function onColorPickerClicked()
+  local accepted = noctalia.openColorPicker(selectedColor, function(color)
+    if color == nil then
+      colorPickerStatus = "Color selection cancelled."
+    else
+      selectedColor = color
+      colorPickerStatus = `Callback returned {color}.`
+    end
+    render()
+  end)
+
+  if not accepted then
+    colorPickerStatus = "A color picker callback is already pending."
+    render()
+  end
 end
 
 function onCloseClicked()

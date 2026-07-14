@@ -9,7 +9,7 @@ shortcut.
 | Field | Value |
 | --- | --- |
 | ID | `noctalia/example` |
-| Entries | Bar widgets: `hello`, `declarative`; service: `ticker`; shortcut: `toggle` |
+| Entries | Bar widgets: `hello`, `declarative`; service: `ticker`; shortcut: `toggle`; launcher: `finder`; panel: `panel` |
 
 ## Usage
 
@@ -52,3 +52,8 @@ You can open the example panel with the following IPC call:
 ```sh
 noctalia msg panel-toggle noctalia/example:panel
 ```
+
+The panel includes a **Color picker** section. Click **Choose color** to open
+Noctalia's native dialog; applying a color updates the swatch and displays the
+hex value returned to the plugin callback, while cancelling displays the
+cancellation result.

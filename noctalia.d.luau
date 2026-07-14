@@ -119,6 +119,10 @@ export type Noctalia = {
   -- Panels.
   togglePanel: (panelId: string) -> (), -- "author/plugin:panel"
 
+  -- Dialogs. The callback receives the selected canonical #RRGGBB color, or nil
+  -- when the dialog is cancelled.
+  openColorPicker: (initialColor: string, onClose: (color: string?) -> ()) -> boolean,
+
   -- Notifications.
   notify: (title: string, body: string?) -> (),
   notifyError: (title: string, body: string?) -> (),
