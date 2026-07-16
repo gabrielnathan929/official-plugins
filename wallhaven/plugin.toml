@@ -26,8 +26,8 @@ default = ""
 [[panel]]
 id = "browser"
 entry = "panel.luau"
-width = 920
-height = 780
+width = 980
+height = 700
 placement = "attached"
 position = "auto"
 

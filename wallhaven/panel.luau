@@ -654,7 +654,7 @@ render = function()
   local pageLabel = if applying then tr("applying") else `Page {page} / {totalPages}`
   panel.render(ui.column({ flexGrow = 1, gap = 12, align = "stretch" }, {
     ui.row({ align = "center", justify = "space_between", gap = 8 }, {
-      ui.label({ text = tr("title"), fontSize = 16, fontWeight = "bold", color = "on_surface", flexGrow = 1 }),
+      ui.label({ text = tr("title"), fontSize = 16, fontWeight = "bold", color = "primary", flexGrow = 1 }),
       ui.button({ glyph = "close", onClick = "onCloseClicked" }),
     }),
 
@@ -662,6 +662,7 @@ render = function()
       ui.input({
         key = "search",
         placeholder = tr("search_placeholder"),
+        focus = true,
         flexGrow = 1,
         onChange = "onSearchChange",
         onSubmit = "onSearchSubmit",
