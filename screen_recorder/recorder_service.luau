@@ -32,6 +32,41 @@ local function cfg(key)
     return noctalia.getConfig(key)
 end
 
+local function log(msg)
+    noctalia.log(`screen_recorder: {msg}`)
+end
+
+-- Where gpu-screen-recorder's own stdout/stderr is captured so its failure reason
+-- can be echoed back through noctalia.log (the process is detached, so this file is
+-- the only way to see why it never started or died early).
+local function gsrLogPath()
+    local base = noctalia.getenv("XDG_STATE_HOME")
+    if base == nil or base == "" then
+        base = "~/.local/state"
+    end
+    return noctalia.expandPath(`{base}/noctalia/screen_recorder`)
+end
+
+local logDir = gsrLogPath()
+local logFile = `{logDir}/gpu-screen-recorder.log`
+noctalia.mkdirAll(logDir)
+
+-- Read the tail of the capture file and echo it, line by line, through noctalia.log.
+local function logGsrTail(reason)
+    local contents = noctalia.readFile(logFile)
+    if contents == nil or contents == "" then
+        log(`{reason}; no gpu-screen-recorder output was captured`)
+        return
+    end
+    if #contents > 1500 then
+        contents = contents:sub(-1500)
+    end
+    log(`{reason}; last gpu-screen-recorder output:`)
+    for line in contents:gmatch("[^\n]+") do
+        log(`  {line}`)
+    end
+end
+
 -- Publish the recorder's status so the widget and shortcut can mirror it.
 local function publishStatus()
     local key = `{state}/{if isAvailable then "1" else "0"}`
@@ -92,9 +127,15 @@ end
 
 local function checkAvailability()
     if noctalia.commandExists("gpu-screen-recorder") then
+        log("gpu-screen-recorder found (native)")
         return true
     end
-    return noctalia.commandExists("flatpak") and flatpakGsrInstalled() == true
+    if noctalia.commandExists("flatpak") and flatpakGsrInstalled() == true then
+        log("gpu-screen-recorder found (flatpak com.dec05eba.gpu_screen_recorder)")
+        return true
+    end
+    log("gpu-screen-recorder NOT found (native or flatpak); recorder unavailable")
+    return false
 end
 
 local function copyToClipboard(path)
@@ -107,15 +148,22 @@ local function shellQuote(value)
     return "'" .. value:gsub("'", [["'"']]) .. "'"
 end
 
-local function notifyRecordingSavedIfPresent()
+-- notifyIfMissing: when the recorder ended on its own (not a user stop) and no
+-- output file exists, gpu-screen-recorder died early — surface its captured output.
+local function notifyRecordingSavedIfPresent(notifyIfMissing)
     local savedPath = outputPath
     if savedPath == "" then return end
 
     noctalia.runAsync(`sleep 0.5; test -s {shellQuote(savedPath)}`, function(result)
         if result.exitCode ~= 0 then
+            if notifyIfMissing then
+                logGsrTail("recording stopped early with no output file")
+                noctalia.notifyError(noctalia.tr("notify.recording-failed"), noctalia.tr("notify.recording-stopped-early"))
+            end
             return
         end
 
+        log(`recording saved: {savedPath}`)
         noctalia.notify(noctalia.tr("notify.recording-saved"), savedPath)
         if cfg("copy_to_clipboard") then
             copyToClipboard(savedPath)
@@ -129,10 +177,15 @@ local function buildAudioFlags()
     local source = cfg("audio_source")
     local codec = cfg("audio_codec")
     if source == "none" then return "" end
+
+    -- 0 = automatic: omit -ab so gpu-screen-recorder uses its own per-codec default.
+    local bitrate = cfg("audio_bitrate")
+    local bitrateFlag = if type(bitrate) == "number" and bitrate > 0 then `-ab {bitrate}` else ""
+
     if source == "both" then
-        return `-ac {codec} -a "default_output|default_input"`
+        return `-ac {codec} {bitrateFlag} -a "default_output|default_input"`
     end
-    return `-ac {codec} -a {source}`
+    return `-ac {codec} {bitrateFlag} -a {source}`
 end
 
 local function buildResolutionFlag()
@@ -162,6 +215,7 @@ local function resolveVideoSource(errorTitle, focusedOutputName, sourceOverride)
 
     local monitor = focusedOutputName
     if monitor == nil or monitor == "" then
+        log("no focused monitor to capture (video_source=focused)")
         noctalia.notifyError(errorTitle, noctalia.tr("notify.no-monitor"))
         return nil
     end
@@ -213,9 +267,14 @@ local function buildRecordCommand(focusedOutputName, sourceOverride)
     local audioFlags = buildAudioFlags()
     local resFlag = buildResolutionFlag()
 
-    local flags = `-w {source} -f {fps} -k {codec} {audioFlags} -q {quality} -cursor {cursor} -cr {cr} {resFlag} {restore} -o "{outputPath}"`
+    local flags = `-w {source} -f {fps} -k {codec} {audioFlags} -q {quality} -cursor {cursor} -cr {cr} {resFlag} {restore} -v no -o "{outputPath}"`
 
-    return `{buildGsrPrefix()} {flags}{buildGsrSuffix()} {flags}\nfi`
+    log(`starting recording: mode={selectedVideoSource(sourceOverride)} target={source} output={outputPath} flags=[{flags}]`)
+
+    local header = `printf '=== gpu-screen-recorder recording %s ===\n' "$(date '+%Y-%m-%d %H:%M:%S')" > "{logFile}"`
+    flags ..= ` >> "{logFile}" 2>&1`
+
+    return `{header}\n{buildGsrPrefix()} {flags}{buildGsrSuffix()} {flags}\nfi`
 end
 
 local function buildReplayCommand(focusedOutputName, sourceOverride)
@@ -235,9 +294,14 @@ local function buildReplayCommand(focusedOutputName, sourceOverride)
     local audioFlags = buildAudioFlags()
     local resFlag = buildResolutionFlag()
 
-    local flags = `-w {source} -c mp4 -f {fps} -k {codec} {audioFlags} -q {quality} -cursor {cursor} -cr {cr} {resFlag} -r {duration} -replay-storage {storage} {restore} -o "{dir}"`
+    local flags = `-w {source} -c mp4 -f {fps} -k {codec} {audioFlags} -q {quality} -cursor {cursor} -cr {cr} {resFlag} -r {duration} -replay-storage {storage} {restore} -v no -o "{dir}"`
 
-    return `{buildGsrPrefix()} {flags}{buildGsrSuffix()} {flags}\nfi`
+    log(`starting replay buffer: mode={selectedVideoSource(sourceOverride)} target={source} dir={dir} flags=[{flags}]`)
+
+    local header = `printf '=== gpu-screen-recorder replay %s ===\n' "$(date '+%Y-%m-%d %H:%M:%S')" > "{logFile}"`
+    flags ..= ` >> "{logFile}" 2>&1`
+
+    return `{header}\n{buildGsrPrefix()} {flags}{buildGsrSuffix()} {flags}\nfi`
 end
 
 -- ── Portal check ─────────────────────────────────────────────────────────
@@ -263,6 +327,7 @@ local function checkPortalsIfNeededAsync(sourceOverride, callback)
 
         pending -= 1
         if pending == 0 then
+            log(`portal check: portal={hasPortal} backend={hasBackend}`)
             callback(hasPortal and hasBackend)
         end
     end
@@ -297,6 +362,7 @@ local function startRecording(focusedOutputName, sourceOverride)
 
         if not portalAvailable then
             setState("idle")
+            log("recording aborted: xdg-desktop-portal / backend not running")
             noctalia.notifyError(noctalia.tr("notify.recording-failed"), noctalia.tr("notify.portal-not-running"))
             updateDisplay()
             return
@@ -305,12 +371,16 @@ local function startRecording(focusedOutputName, sourceOverride)
         local cmd = buildRecordCommand(focusedOutputName, sourceOverride)
         if not cmd then
             setState("idle")
+            log("recording aborted: could not build command (no video source)")
             updateDisplay()
             return
         end
 
-        if not noctalia.runAsync(cmd) then
+        if noctalia.runAsync(cmd) then
+            log("gpu-screen-recorder launched")
+        else
             setState("idle")
+            log("recording aborted: runAsync failed to launch gpu-screen-recorder")
             noctalia.notifyError(noctalia.tr("notify.recording-failed"), noctalia.tr("notify.launch-failed"))
             updateDisplay()
         end
@@ -320,6 +390,7 @@ end
 local function stopRecording()
     if not table.find(RECORDING_STATES, state) then return end
 
+    log("stopping recording (user request)")
     noctalia.runAsync("pkill -SIGINT -f '^(/nix/store/.*-)?gpu-screen-recorder' 2>/dev/null || pkill -SIGINT -f '^com.dec05eba.gpu_screen_recorder' 2>/dev/null || true")
     -- Force kill fallback
     noctalia.runAsync("(sleep 3 && pkill -9 -f '^(/nix/store/.*-)?gpu-screen-recorder' 2>/dev/null || true) &")
@@ -346,6 +417,7 @@ local function startReplay(focusedOutputName, sourceOverride)
 
         if not portalAvailable then
             setState("idle")
+            log("replay aborted: xdg-desktop-portal / backend not running")
             noctalia.notifyError(noctalia.tr("notify.replay-failed"), noctalia.tr("notify.portal-not-running"))
             updateDisplay()
             return
@@ -354,12 +426,16 @@ local function startReplay(focusedOutputName, sourceOverride)
         local cmd = buildReplayCommand(focusedOutputName, sourceOverride)
         if not cmd then
             setState("idle")
+            log("replay aborted: could not build command (no video source)")
             updateDisplay()
             return
         end
 
-        if not noctalia.runAsync(cmd) then
+        if noctalia.runAsync(cmd) then
+            log("gpu-screen-recorder replay buffer launched")
+        else
             setState("idle")
+            log("replay aborted: runAsync failed to launch gpu-screen-recorder")
             noctalia.notifyError(noctalia.tr("notify.replay-failed"), noctalia.tr("notify.launch-failed"))
             updateDisplay()
         end
@@ -369,6 +445,7 @@ end
 local function stopReplay()
     if not table.find(REPLAY_STATES, state) then return end
 
+    log("stopping replay buffer (user request)")
     noctalia.runAsync("pkill -SIGINT -f 'gpu-screen-recorder.*-r ' 2>/dev/null || true")
     noctalia.runAsync("(sleep 3 && pkill -9 -f 'gpu-screen-recorder.*-r ' 2>/dev/null || true) &")
 
@@ -378,6 +455,7 @@ end
 
 local function saveReplay()
     if state ~= "replaying" then return end
+    log("saving replay buffer (SIGUSR1)")
     noctalia.runAsync("pkill -SIGUSR1 -f 'gpu-screen-recorder.*-r ' 2>/dev/null || true")
 
     local pattern = cfg("replay_filename_pattern")
@@ -415,33 +493,45 @@ local function checkProcessState(processState)
         pendingTick += CHECK_TICKS
         if pendingTick >= PENDING_TICKS then
             if processState == "recording" then
+                log("recording active")
                 setState("recording")
             else
+                log("recording never started (process not detected)")
+                logGsrTail("recording failed to start")
                 setState("idle")
+                noctalia.notifyError(noctalia.tr("notify.recording-failed"), noctalia.tr("notify.recording-stopped-early"))
             end
         end
     elseif state == "replay_pending" then
         pendingTick += CHECK_TICKS
         if pendingTick >= PENDING_TICKS then
             if processState == "replaying" then
+                log("replay buffer active")
                 setState("replaying")
                 noctalia.notify(noctalia.tr("notify.replay-active"))
             else
+                log("replay buffer never started (process not detected)")
+                logGsrTail("replay buffer failed to start")
                 setState("idle")
+                noctalia.notifyError(noctalia.tr("notify.replay-failed"), noctalia.tr("notify.recording-stopped-early"))
             end
         end
     elseif state == "recording" then
         if processState ~= "recording" then
+            log("recording process ended on its own")
             setState("idle")
-            notifyRecordingSavedIfPresent()
+            notifyRecordingSavedIfPresent(true)
         end
     elseif state == "replaying" then
         if processState ~= "replaying" then
+            log("replay buffer process ended on its own")
+            logGsrTail("replay buffer stopped")
             setState("idle")
             noctalia.notify(noctalia.tr("notify.replay-stopped"))
         end
     elseif state == "idle" then
         if processState ~= nil then
+            log(`adopted externally-started gpu-screen-recorder ({processState})`)
             setState(processState)
         end
     end
@@ -504,6 +594,8 @@ function onIpc(event, payload)
     if focusedOutputName == nil or focusedOutputName == "" then
         focusedOutputName = noctalia.focusedOutputName()
     end
+
+    log(`ipc '{event}' (state={state} source={sourceOverride or "config"} monitor={focusedOutputName or "?"})`)
 
     if event == "start" then
         startRecording(focusedOutputName, sourceOverride)

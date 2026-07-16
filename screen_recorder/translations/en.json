@@ -13,7 +13,8 @@
     "launch-failed": "Could not launch gpu-screen-recorder",
     "replay-stopped": "Replay buffer stopped",
     "replay-saved": "Replay saved",
-    "replay-active": "Replay buffer active"
+    "replay-active": "Replay buffer active",
+    "recording-stopped-early": "gpu-screen-recorder exited without saving. Check the Noctalia log for details."
   },
   "settings": {
     "video_source": {
@@ -74,6 +75,10 @@
         "aac": "AAC",
         "flac": "FLAC"
       }
+    },
+    "audio_bitrate": {
+      "label": "Audio bitrate (kbps)",
+      "description": "0 = automatic (128 for Opus/FLAC, 160 for AAC). Lower it for smaller files."
     },
     "show_cursor": {
       "label": "Show cursor"

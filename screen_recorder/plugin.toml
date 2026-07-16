@@ -12,7 +12,7 @@
 
 id = "noctalia/screen_recorder"
 name = "Screen Recorder"
-version = "1.1.10"
+version = "1.2.0"
 min_noctalia = "5.0.0"
 author = "noctalia"
 license = "MIT"
@@ -108,6 +108,16 @@ options = [
   { value = "aac", label_key = "settings.audio_codec.options.aac" },
   { value = "flac", label_key = "settings.audio_codec.options.flac" },
 ]
+
+[[setting]]
+key = "audio_bitrate"
+type = "int"
+label_key = "settings.audio_bitrate.label"
+description_key = "settings.audio_bitrate.description"
+default = 0
+min = 0
+max = 512
+visible_when = { key = "audio_source", values = ["default_output", "default_input", "both"] }
 
 [[setting]]
 key = "show_cursor"
